@@ -5,7 +5,6 @@
 #include "stc8h.h"
 #include "config.h"
 
-volatile unsigned char busy; //true if we are currently sending a byte
 volatile unsigned char dmxData[NUM_ADRESSES];
 unsigned short dmxAddr = 0; //is written to from outside
 
@@ -13,7 +12,7 @@ unsigned short dmxAddr = 0; //is written to from outside
  * We receive up to 512 data bytes after the start code.
  * The DMA will write received bytes here, then we copy
  * the relevant slice into dmxData. */
-static volatile __xdata unsigned char dmxDmaBuffer[512];
+static __xdata volatile unsigned char dmxDmaBuffer[512];
 
 /* State machine for DMX reception:
  * WAIT_BREAK: waiting for a break (framing error, RB8=0)
@@ -81,14 +80,13 @@ void uartInit()
     dmxDmaBuffer[i] = 0;
   }
 
-  busy = 0;
   dmxState = DMX_WAIT_BREAK;
 
   /* DMX uses one start bit, 2 stop bits and no parity.
    * Mode 3: 8-bit variable baud rate async,
    * one start bit, one stop bit, one programmable stop bit (TB8)
-   * SM0=1, SM1=1, SM2=0, REN=1, TB8=1 */
-  SCON = 0xD8;
+   * SM0=1, SM1=1, SM2=0, REN=1, TB8=0 (no TX) */
+  SCON = 0xD0;
 
   /* Calculate timer overflow values for BAUD rate */
   TL1 = (unsigned char)(65536 - (FOSC / 4 / BAUD));
@@ -144,10 +142,6 @@ void uartInterrupt() __interrupt(SI0_VECTOR) __using(1)
     }
   }
 
-  if(TI) {
-    TI = 0;
-    busy = 0;
-  }
 }
 
 /* DMA UART1 receive completion interrupt.
@@ -177,19 +171,4 @@ void dmaUart1RInterrupt() __interrupt(DMA_UR1R_VECTOR) __using(1)
   PWR_LED = 1;
 
   dmxState = DMX_WAIT_BREAK;
-}
-
-void uartSendByte(unsigned char dat)
-{
-  while(busy);
-  ACC = dat;
-  busy = 1;
-  SBUF = ACC;
-}
-
-void uartSendString(char *s)
-{
-  while(*s) {
-    uartSendByte(*s++);
-  }
 }
