@@ -7,22 +7,10 @@
 #include "config.h"
 #include "leds.h"
 
-//400 interrupts/s 
-#define STROBE_TIMER_START (65536-FOSC/12/400)
-// on time of a strobe flash in ~2.5ms steps
-#define STROBE_ON_TIME_MS 3
-
-
 extern volatile unsigned char dmxData[NUM_ADRESSES]; //defined in uart.c
 extern unsigned short dmxAddr; //defined in uart.c
 unsigned char functionBit = 0;
 extern unsigned char ledBrightness[NUM_LEDS]; //defined in leds.c
-
-/** this value is increased by the led timer every 2,42130688ms .
- *  It is used in the strobe logic.
- *  The strobe logic also resets this value to zero every time a strobe flash finishes.
- *  The maximum delay the timer can achieve is  637ms */
-volatile unsigned char strobeCnt = 0;
 
 //used to clicker the power led
 unsigned char pwrLedCnt = 0;
@@ -61,38 +49,9 @@ inline void readDipSwitch()
 }
 
 
-inline unsigned char calcStrobeTimeMs(unsigned char strobeDmxVal)
-{
-    // maps between 200 and 10 timer ticks
-    // i.e. 500ms and 25ms delay
-    // i.e. 2hz and 40hz
-
-    /** 
-     * Unoptimized floating point version of this function:
-     * 
-     * long map(long x, long in_min, long in_max, long out_min, long out_max) 
-     * {
-     *     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-     * }
-     * return map(strobeDmxVal, 0, 255, 255, 25);
-     * 
-     * This code has been optimized by using fixed comma math with factor 255.
-     */
-
-    
-    return (51000 - strobeDmxVal * 190)/255;
-
-}
-
 void main()
 {
     unsigned short masterBrightness = 0;
-    unsigned char strobeDmx = 0;
-    unsigned char strobeOffTime = 0;
-    
-    unsigned char oldStrobe = 0;
-    unsigned char strobeOn = 0; //current state of strobe (led on or off)
-    
 
     dipInit();
 
@@ -108,56 +67,7 @@ void main()
         flickerPwrLed();
         readDipSwitch();
 
-        strobeDmx = dmxData[1];
-        if(!oldStrobe && strobeDmx)
-        {
-            //strobe has been turned on, reset strobe start time to now
-            strobeCnt = 0;
-            strobeOn = 1;
-        }
-        oldStrobe = strobeDmx;
-
-        if(strobeDmx)
-        {
-            if(strobeOn)
-            {
-                //check if strobe flash needs to be turned off
-                if(strobeCnt >= STROBE_ON_TIME_MS)
-                {
-                    //led was on long enough, turn off
-                    masterBrightness = 0;
-                    strobeOn = 0;
-                    strobeCnt = 0;
-                }
-                else
-                {
-                    //led should stay on (or turn on)
-                    masterBrightness = dmxData[0];
-                }
-            }
-            else
-            {
-                strobeOffTime = calcStrobeTimeMs(strobeDmx);
-                //check if it is time to turn on strobe
-                if(strobeCnt > strobeOffTime)
-                {
-                    //time to turn the strobe back on
-                    masterBrightness = dmxData[0];
-                    strobeOn = 1;
-                    strobeCnt = 0;
-                }
-                else
-                {
-                    //leave it off a little longer (or turn it off)
-                    masterBrightness = 0;
-                }
-            }
-        }
-        else
-        {
-            masterBrightness = dmxData[0];
-        }
-
+        masterBrightness = dmxData[0];
 
         // The master scaling is done in fixed point math with scale 255
         // 255 was chosen because it allows to ommit scaling of masterBrightness
