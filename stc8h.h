@@ -38,4 +38,24 @@
 #define PWMA_PS     (*(unsigned char volatile __xdata *)0xFECC)
 #define PWMA_IOFR   (*(unsigned char volatile __xdata *)0xFECD)
 
+/* UART1 DMA registers (extended SFR, need EAXFR) */
+#define DMA_UR1T_CFG   (*(unsigned char volatile __xdata *)0xFA00)
+#define DMA_UR1T_CR    (*(unsigned char volatile __xdata *)0xFA01)
+#define DMA_UR1T_STA   (*(unsigned char volatile __xdata *)0xFA02)
+#define DMA_UR1T_AMT   (*(unsigned char volatile __xdata *)0xFA03)
+#define DMA_UR1T_DONE  (*(unsigned char volatile __xdata *)0xFA04)
+#define DMA_UR1T_TXAH  (*(unsigned char volatile __xdata *)0xFA05)
+#define DMA_UR1T_TXAL  (*(unsigned char volatile __xdata *)0xFA06)
+
+#define DMA_UR1R_CFG   (*(unsigned char volatile __xdata *)0xFA08)
+#define DMA_UR1R_CR    (*(unsigned char volatile __xdata *)0xFA09)
+#define DMA_UR1R_STA   (*(unsigned char volatile __xdata *)0xFA0A)
+#define DMA_UR1R_AMT   (*(unsigned char volatile __xdata *)0xFA0B)
+#define DMA_UR1R_DONE  (*(unsigned char volatile __xdata *)0xFA0C)
+#define DMA_UR1R_RXAH  (*(unsigned char volatile __xdata *)0xFA0D)
+#define DMA_UR1R_RXAL  (*(unsigned char volatile __xdata *)0xFA0E)
+
+/* DMA interrupt vector number */
+#define DMA_UR1R_VECTOR 13
+
 #endif

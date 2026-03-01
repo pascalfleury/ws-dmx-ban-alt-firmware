@@ -2,7 +2,9 @@
 #ifndef UART_H
 #define UART_H
 
-void uartInterrupt()  __interrupt(4) __using(1);
+void uartInterrupt();
+
+void dmaUart1RInterrupt();
 
 void uartInit();
 
