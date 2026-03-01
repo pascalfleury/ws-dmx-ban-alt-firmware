@@ -5,10 +5,6 @@
 #include <mcs51/8051.h>
 #include "stc8h.h"
 
-void uartInterrupt();
-
-void dmaUart1RInterrupt();
-
 void uartInit();
 
 void uartSendByte(unsigned char dat);
