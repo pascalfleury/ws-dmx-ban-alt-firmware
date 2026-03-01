@@ -81,6 +81,9 @@ The software will expose several modes to help with driving the R/G/B channels. 
 
 ** Modes
 
+We can handle 2 modes, depending on DIP_10 (the mode bit). This is reflected in the code that we handle a different number of DMX addresses.
+Note that this dip can be changed live, so the number of used adresses needs to be dynamic.
+
 *** Simple mode (4 channels)
 This exposes these channels:
 1. general dimmer (coarse)
