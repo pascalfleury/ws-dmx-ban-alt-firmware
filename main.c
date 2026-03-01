@@ -7,8 +7,6 @@
 #include "leds.h"
 
 extern volatile unsigned char dmxData[NUM_ADRESSES]; //defined in uart.c
-extern unsigned short dmxAddr; //defined in uart.c
-unsigned char functionBit = 0;
 extern unsigned char ledBrightness[NUM_LEDS]; //defined in leds.c
 
 //used to clicker the power led
@@ -29,22 +27,6 @@ inline void flickerPwrLed()
             pwrLedCnt = 0;
         }
     }
-}
-
-inline void readDipSwitch()
-{
-    dmxAddr = readDmxAddr();
- 
-    if(dmxAddr == 0)
-    {
-        dmxAddr = 1;
-    }
-    if(dmxAddr > 512 - NUM_ADRESSES)
-    {
-        dmxAddr = 512 - NUM_ADRESSES;
-    }
-
-    functionBit = readFunctionDip();
 }
 
 
