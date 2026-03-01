@@ -8,7 +8,6 @@
 void uartInit();
 
 void uartSendByte(unsigned char dat);
-
 void uartSendString(char *s);
 
 
