@@ -1,21 +1,8 @@
 #include "dip.h"
 #include <mcs51/lint.h>
-#include <mcs51/8051.h>
-#include "stc15w.h"
+#include "board.h"
 
-/* dip mapping:
-   1  = P1.2
-   2  = P1.3
-   3  = P1.4
-   4  = P1.5
-   5  = P1.6
-   6  = P1.7
-   7  = P5.4
-   8  = P5.5
-   9  = P3.2
-   10 = P3.3
-*/
-
+/* DIP switch mapping is defined in the board header */
 
 void dipInit()
 {
@@ -23,16 +10,16 @@ void dipInit()
     //This is the default thus we dont have to configure the mode.
 
     //turn on the pullups
-    P1_2 = 1;
-    P1_3 = 1;
-    P1_4 = 1;
-    P1_5 = 1;
-    P1_6 = 1;
-    P1_7 = 1;
-    P5_4 = 1;
-    P5_5 = 1;
-    P3_2 = 1;
-    P3_3 = 1;
+    DIP_1 = 1;
+    DIP_2 = 1;
+    DIP_3 = 1;
+    DIP_4 = 1;
+    DIP_5 = 1;
+    DIP_6 = 1;
+    DIP_7 = 1;
+    DIP_8 = 1;
+    DIP_9 = 1;
+    DIP_10_MODE = 1;
 }
 
 unsigned short readDmxAddr()
@@ -40,15 +27,15 @@ unsigned short readDmxAddr()
     //initialize unused bits as 1 (will later be inverted to 0)
     unsigned short result = 0xfe00;
 
-    result = result | P1_2;
-    result = result | (P1_3 << 1);
-    result = result | (P1_4 << 2);
-    result = result | (P1_5 << 3);
-    result = result | (P1_6 << 4);
-    result = result | (P1_7 << 5);
-    result = result | (P5_4 << 6);
-    result = result | (P5_5 << 7);
-    result = result | (P3_2 << 8);
+    result = result | DIP_1;
+    result = result | (DIP_2 << 1);
+    result = result | (DIP_3 << 2);
+    result = result | (DIP_4 << 3);
+    result = result | (DIP_5 << 4);
+    result = result | (DIP_6 << 5);
+    result = result | (DIP_7 << 6);
+    result = result | (DIP_8 << 7);
+    result = result | (DIP_9 << 8);
 
     //due to the pullups we read a 1 when the dip is in off-position.
     //thus invert every pin
@@ -58,5 +45,5 @@ unsigned short readDmxAddr()
 
 unsigned char readFunctionDip()
 {
-    return !P3_3;
+    return !DIP_10_MODE;
 }

@@ -1,6 +1,5 @@
 #include <mcs51/lint.h>
-#include <mcs51/8051.h>
-#include "stc15w.h"
+#include "board.h"
 #include "delay.h"
 #include "uart.h"
 #include "dip.h"
@@ -18,7 +17,7 @@ unsigned char pwrLedCnt = 0;
 inline void flickerPwrLed()
 {
     //if power led has been turned off by uart, leave it off for 255 loop iterations
-    if(P0_3)
+    if(PWR_LED)
     {
         pwrLedCnt++;
         if(pwrLedCnt == 255)
@@ -26,7 +25,7 @@ inline void flickerPwrLed()
             //turn on power led 
             //uart turns it off when it has received a correct frame.
             //this results in flickering if dmx is present and steady on if no dmx present.
-            P0_3 = 0;
+            PWR_LED = 0;
             pwrLedCnt = 0;
         }
     }
@@ -60,7 +59,7 @@ void main()
     uartInit(); //initially sets AUXR
     ledInit(); //modifies AUXR
 
-    P0_3 = 0; //turn on power
+    PWR_LED = 0; //turn on power
 
     while(1)
     {

@@ -1,5 +1,6 @@
 #include "leds.h"
 #include "config.h"
+#include "board.h"
 
 //software pwm for leds
 
@@ -23,17 +24,17 @@ volatile unsigned char ledBrightness[NUM_LEDS];
 
 void ledInit()
 {
-    P3_4 = 0;
-    P3_5 = 0;
-    P2_1 = 0;
-    P2_2 = 0;
-    P2_3 = 0;
-    P2_4 = 0;
-    P2_5 = 0;
-    P2_6 = 0;
+    LED_1 = 0;
+    LED_2 = 0;
+    LED_3 = 0;
+    LED_4 = 0;
+    LED_5 = 0;
+    LED_6 = 0;
+    LED_7 = 0;
+    LED_8 = 0;
 
-    P3M0 = 0x30; //set P3.4 and P3.5 to strong push pull output
-    P2M0 = 0x7e; //set P2.1 - P2.6 to strong push pull output
+    P3M0 = LED_P3M0_MASK;
+    P2M0 = LED_P2M0_MASK;
 
     AUXR &= ~0x80;   // Set timer0 clock source to sysclk/12 (12T mode)
     TMOD &= 0xF0;    // Clear 4bit field for timer0
@@ -57,7 +58,7 @@ void ledInit()
 
 
 volatile unsigned char timer0Cnt = 0;
-void timer0Interrupt()  __interrupt(TF0_VECTOR) __using(1)
+void timer0Interrupt()  __interrupt(1) __using(1)
 {
 
     //FIXME this code is not generic at all because there seems to be no way
@@ -67,74 +68,74 @@ void timer0Interrupt()  __interrupt(TF0_VECTOR) __using(1)
     // FIXME try to fix it without decreasing the performance
     if(timer0Cnt < ledBrightness[0])
     {
-        P3_4 = 1;
+        LED_1 = 1;
     }
     else
     {
-        P3_4 = 0;
+        LED_1 = 0;
     }
 
     if(timer0Cnt < ledBrightness[1])
     {
-        P3_5 = 1;
+        LED_2 = 1;
     }
     else
     {
-        P3_5 = 0;
+        LED_2 = 0;
     }
 
     if(timer0Cnt < ledBrightness[2])
     {
-        P2_1 = 1;
+        LED_3 = 1;
     }
     else
     {
-        P2_1 = 0;
+        LED_3 = 0;
     }
 
     if(timer0Cnt < ledBrightness[3])
     {
-        P2_2 = 1;
+        LED_4 = 1;
     }
     else
     {
-        P2_2 = 0;
+        LED_4 = 0;
     }
 
     if(timer0Cnt < ledBrightness[4])
     {
-        P2_3 = 1;
+        LED_5 = 1;
     }
     else
     {
-        P2_3 = 0;
+        LED_5 = 0;
     }
 
     if(timer0Cnt < ledBrightness[5])
     {
-        P2_4 = 1;
+        LED_6 = 1;
     }
     else
     {
-        P2_4 = 0;
+        LED_6 = 0;
     }
 
     if(timer0Cnt < ledBrightness[6])
     {
-        P2_5 = 1;
+        LED_7 = 1;
     }
     else
     {
-        P2_5 = 0;
+        LED_7 = 0;
     }
 
     if(timer0Cnt < ledBrightness[7])
     {
-        P2_6 = 1;
+        LED_8 = 1;
     }
     else
     {
-        P2_6 = 0;
+        LED_8 = 0;
     }
 
     timer0Cnt++;
