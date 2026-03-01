@@ -1,6 +1,7 @@
 #include "pwm.h"
 #include <mcs51/8051.h>
 #include "stc8h.h"
+#include "stc15w.h"
 
 /* PWM Configuration:
  * - 24MHz system clock
