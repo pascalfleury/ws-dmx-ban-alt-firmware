@@ -1,3 +1,7 @@
 /.vscode/
 /build/
 /.directory
+.aider*
+.envrc
+.venv/
+.direnv/
