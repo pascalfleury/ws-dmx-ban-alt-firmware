@@ -13,7 +13,7 @@ unsigned short dmxAddr = 0; //is written to from outside
  * We receive up to 512 data bytes after the start code.
  * The DMA will write received bytes here, then we copy
  * the relevant slice into dmxData. */
-static __xdata volatile unsigned char dmxDmaBuffer[512];
+static volatile __xdata unsigned char dmxDmaBuffer[512];
 
 /* State machine for DMX reception:
  * WAIT_BREAK: waiting for a break (framing error, RB8=0)
@@ -91,8 +91,8 @@ void uartInit()
   SCON = 0xD8;
 
   /* Calculate timer overflow values for BAUD rate */
-  TL1 = (65536 - (FOSC / 4 / BAUD));
-  TH1 = (65536 - (FOSC / 4 / BAUD)) >> 8;
+  TL1 = (unsigned char)(65536 - (FOSC / 4 / BAUD));
+  TH1 = (unsigned char)((65536 - (FOSC / 4 / BAUD)) >> 8);
   AUXR = 0x40; //T1 in 1T mode, use T1 as uart1 baud-rate generator
 
   TR1 = 1; //start timer 1
