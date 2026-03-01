@@ -4,7 +4,7 @@ The board is equipped with dimmers for LEDs, and has leds in several white tempe
 
 * Hardware Board
 
-The board is based on the processor STC8H1K16 (http://www.stcmicro.com/datasheet/STC8H-en.pdf)
+The board is based on the processor STC8H1K16-36I-LQFP32  (http://www.stcmicro.com/datasheet/STC8H-en.pdf)
 It exists in several version, with 3, 4, 5 or 6 PWM outputs.
 Currently we use the 3 output version.
 
@@ -16,43 +16,43 @@ Memory:
 ** Pinout
 As far as I can tell, this is the pinout:
 
-| pin | port | function              |
-|-----+------+-----------------------|
-|   1 | P1.0 | pwm O3                |
-|   2 | P1.1 |                       |
-|   3 | P1.2 | pwm O2                |
-|   4 | P1.6 |                       |
-|   5 | P1.7 | pwm O1                |
-|   6 |      | AGnd                  |
-|   7 |      | ADC_Vref+             |
-|   8 |      | AVcc                  |
-|-----+------+-----------------------|
-|   9 | P5.4 |                       |
-|  10 | Vcc  |                       |
-|  11 | P5.5 |                       |
-|  12 | Gnd  |                       |
-|  13 | P3.0 | (RxD) prog connector? |
-|  14 | P3.1 | (TxD) prog connector? |
-|  15 | P3.2 | DMX512 LED            |
-|  16 | P3.3 | DIP 1                 |
-|-----+------+-----------------------|
-|  17 | P3.4 | DIP 2                 |
-|  18 | P3.5 | DIP 3                 |
-|  19 | P3.6 | DIP 4                 |
-|  20 | P3.7 | DIP 5                 |
-|  21 | P2.0 |                       |
-|  22 | P2.1 |                       |
-|  23 | P2.2 |                       |
-|  24 | P2.3 |                       |
-|-----+------+-----------------------|
-|  25 | P2.4 | DIP 6                 |
-|  26 | P2.5 | DIP 7                 |
-|  27 | P2.6 | DIP 8                 |
-|  28 | P2.7 | DIP 9                 |
-|  29 | P0.0 | DIP 10                |
-|  30 | P0.1 |                       |
-|  31 | P0.2 |                       |
-|  32 | P0.3 |                       |
+| pin | port      | function             |
+|-----+-----------+----------------------|
+|   1 | P1.0      | pwm O3               |
+|   2 | P1.1      |                      |
+|   3 | P1.2      | pwm O2               |
+|   4 | P1.3      |                      |
+|   5 | P1.4      | pwm O1               |
+|   6 | P1.5      | AGnd                 |
+|   7 | P1.6      | ADC_Vref+            |
+|   8 | P1.7      | AVcc                 |
+|-----+-----------+----------------------|
+|   9 | P5.4      |                      |
+|  10 | Vcc/AVcc  |                      |
+|  11 | ADC_VRef+ |                      |
+|  12 | Gnd/AGnd  |                      |
+|  13 | P3.0      | (RxD) prog connector |
+|  14 | P3.1      | (TxD) prog connector |
+|  15 | P3.2      | DMX512 LED           |
+|  16 | P3.3      | DIP 1                |
+|-----+-----------+----------------------|
+|  17 | P3.4      | DIP 2                |
+|  18 | P3.5      | DIP 3                |
+|  19 | P3.6      | DIP 4                |
+|  20 | P3.7      | DIP 5                |
+|  21 | P2.0      |                      |
+|  22 | P2.1      |                      |
+|  23 | P2.2      |                      |
+|  24 | P2.3      |                      |
+|-----+-----------+----------------------|
+|  25 | P2.4      | DIP 6                |
+|  26 | P2.5      | DIP 7                |
+|  27 | P2.6      | DIP 8                |
+|  28 | P2.7      | DIP 9                |
+|  29 | P0.0      | DIP 10               |
+|  30 | P0.1      |                      |
+|  31 | P0.2      |                      |
+|  32 | P0.3      |                      |
 
 * DMX
 The software will expose several modes to help with driving the R/G/B channels. Modes are a collection of channels.
