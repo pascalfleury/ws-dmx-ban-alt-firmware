@@ -3,7 +3,7 @@
 Adding the envrc things to find aider
 
 #+begin_src bash
-  sudo apt-install direnv python3-virtualenv python3-pip
+  sudo apt install direnv python3-virtualenv python3-pip
 #+end_src
 
 
