@@ -4,7 +4,10 @@
 /* STC8H1K16 specific registers */
 
 /* P_SW2 - Peripheral function switch register 2 */
+/* Note: P_SW2 may already be defined in stc15w.h */
+#ifndef P_SW2
 __sfr __at (0xBA) P_SW2;
+#endif
 #define EAXFR 0x80  /* Enable access to extended SFR (bit 7) */
 
 /* Extended SFR access macros for PWMA registers */
