@@ -2,7 +2,7 @@
 
 The board is equipped with dimmers for LEDs, and has leds in several white temperatures. The goal is to be able to drive the dimming and the color temperature separately through DMX, while the firmware will do the correct "mixing" of warm and cold light to get to the wanted temperature.
 
-* Board
+* Hardware Board
 
 The board is based on the processor STC8H1K16 (http://www.stcmicro.com/datasheet/STC8H-en.pdf)
 It exists in several version, with 3, 4, 5 or 6 PWM outputs.
@@ -83,3 +83,19 @@ This exposes these channels:
 4. color temperature (fine)
 5. strobe mode
 6. strobe speed
+
+* Development Environment
+** Dev tools
+I am using stcgal and sdcc as the open-source development tools.
+
+** Global Coding Rules
+*** Functionality
+- Never use floating point (strict constraint).
+- All DMX buffer logic must reside in ~dmx.c~.
+
+*** Style
+Always use the '1TBS' (One True Brace Style) for C code.
+  - Braces on the same line as 'if', 'while', 'for'.
+  - Use 2 spaces for indentation (no tabs).
+  - Keep the 'else' on the same line as the closing brace: '} else {'.
+Do not try to fix style yourself at the end, I will do it.
