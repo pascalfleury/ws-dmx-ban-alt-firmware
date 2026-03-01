@@ -1,0 +1,34 @@
+* Env Setup
+
+Adding the envrc things to find aider
+
+#+begin_src bash
+  sudo apt-install direnv python3-virtualenv python3-pip
+#+end_src
+
+
+In the project dir, add the following files:
+
+ #+begin_src yaml file:.envrc
+   layout python python3
+ #+end_src
+
+ Then make the venv and enable it automatically
+ #+begin_src bash
+   mkdir .venv && python -m venv .venv
+   direnv allow
+ #+end_src
+
+* Adding aider
+
+#+begin_src bash
+  pip3 install aider-chat
+#+end_src
+
+* Adding Emacs stuff for it
+Add the envrc.el package that deals with =direnv=  to modify the path:
+#+begin_src emacs-lisp
+  (use-package envrc
+    :hook (after-init . envrc-global-mode))
+  (use-package inheritenv)
+#+end_src
