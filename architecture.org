@@ -86,7 +86,10 @@ This exposes these channels:
 
 * Development Environment
 ** Dev tools
-I am using stcgal and sdcc as the open-source development tools.
+I use only open-source tools. do not suggest any non-open tools.
+Building: sdcc on platformio
+Flashing: stcgal
+Debugging: printf along with a terminal
 
 ** Global Coding Rules
 *** Functionality
