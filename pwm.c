@@ -4,8 +4,8 @@
 
 /* PWM Configuration:
  * - 24MHz system clock
- * - 1200 steps resolution
- * - Frequency = 24MHz / 1200 = 20kHz
+ * - 65536 steps resolution (full 16-bit range)
+ * - Frequency = 24MHz / 65536 = ~366Hz
  * - Channels: P1.7 (PWM1/O1), P1.2 (PWM2/O2), P1.0 (PWM3/O3)
  */
 
@@ -13,9 +13,9 @@ void pwmInit(void) {
   /* Enable extended SFR access */
   P_SW2 |= EAXFR;
   
-  /* Configure PWM period (ARR = 1199 for 1200 steps, 0-indexed) */
-  PWMA_ARRH = (1199 >> 8);
-  PWMA_ARRL = (1199 & 0xFF);
+  /* Configure PWM period (ARR = 65535 for 65536 steps, 0-indexed) */
+  PWMA_ARRH = 0xFF;
+  PWMA_ARRL = 0xFF;
   
   /* No prescaler needed (PSC = 0 for 24MHz / 1 = 24MHz) */
   PWMA_PSCRH = 0;
