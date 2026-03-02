@@ -1,19 +1,18 @@
 #include "color.h"
 #include "numeric.h"
+#include "board.h"
 
-/* Color temperature mapping for 3-channel boards.
+/* Color temperatures for each PWM channel, defined by the board.
+ * Must be in ascending order (warmest to coldest). */
+static const unsigned short colorTemps[NUM_PWM_CHANNELS] = PWM_COLOR_TEMPS;
+
+/* Color temperature mapping using board-defined values.
  *
- * The 3 PWM channels drive LEDs of different white temperatures:
- *   PWM_1 = warm white
- *   PWM_2 = neutral white
- *   PWM_3 = cold white
+ * The colorTemp range 0x0000..0xFFFF is divided into (NUM_PWM_CHANNELS - 1) zones.
+ * Each zone represents a crossfade between two adjacent PWM channels.
  *
- * colorTemp range 0x0000..0xFFFF is split into 2 zones:
- *   Zone 0 (0x0000..0x7FFF): warm -> neutral crossfade
- *   Zone 1 (0x8000..0xFFFF): neutral -> cold crossfade
- *
- * Within each zone, we linearly interpolate between the two
- * adjacent channels. The result is then scaled by the dimmer value.
+ * Within each zone, we linearly interpolate between the two adjacent channels.
+ * The result is then scaled by the dimmer value.
  *
  * All math is 16-bit or 32-bit integer, no floating point.
  */
@@ -29,34 +28,44 @@ static unsigned short scale16(unsigned short a, unsigned short b)
 
 void colorCompute(const DmxState *state, PwmState *pwm)
 {
-  unsigned short warm = 0;
-  unsigned short neutral = 0;
-  unsigned short cold = 0;
   unsigned short colorTemp = state->colorTemp;
   unsigned short dimmer = state->dimmer;
+  unsigned char i;
+  unsigned char zone;
+  unsigned short zoneSize;
+  unsigned short posInZone;
   unsigned short fade;
 
-  if (colorTemp < 0x8000) {
-    /* Zone 0: warm to neutral crossfade.
-     * fade = 0 at colorTemp=0x0000, fade = 0xFFFF at colorTemp=0x7FFF */
-    fade = colorTemp << 1;
-    warm = 0xFFFF - fade;
-    neutral = fade;
-    cold = 0;
-  } else {
-    /* Zone 1: neutral to cold crossfade.
-     * fade = 0 at colorTemp=0x8000, fade = 0xFFFF at colorTemp=0xFFFF */
-    fade = (colorTemp - 0x8000) << 1;
-    warm = 0;
-    neutral = 0xFFFF - fade;
-    cold = fade;
+  /* Initialize all channels to 0 */
+  for (i = 0; i < NUM_PWM_CHANNELS; i++) {
+    pwm->channel[i] = 0;
   }
 
-  /* Scale by dimmer */
-  pwm->channel[0] = scale16(warm, dimmer);
-  pwm->channel[1] = scale16(neutral, dimmer);
+#if NUM_PWM_CHANNELS == 1
+  /* Single channel: just apply dimmer */
+  pwm->channel[0] = dimmer;
+  return;
+#else
+  /* Number of zones = NUM_PWM_CHANNELS - 1 */
+  /* Each zone spans (0x10000 / numZones) of the colorTemp range */
+  zoneSize = 0xFFFF / (NUM_PWM_CHANNELS - 1);
 
-#if NUM_PWM_CHANNELS >= 3
-  pwm->channel[2] = scale16(cold, dimmer);
+  /* Determine which zone we're in */
+  zone = colorTemp / zoneSize;
+
+  /* Clamp to last zone */
+  if (zone >= NUM_PWM_CHANNELS - 1) {
+    zone = NUM_PWM_CHANNELS - 2;
+  }
+
+  /* Position within the zone: 0..zoneSize */
+  posInZone = colorTemp - (unsigned short)zone * zoneSize;
+
+  /* Fade: 0 at start of zone, 0xFFFF at end of zone */
+  fade = (unsigned short)(((unsigned long)posInZone << 16) / zoneSize);
+
+  /* Crossfade between channel[zone] and channel[zone+1] */
+  pwm->channel[zone]     = scale16(0xFFFF - fade, dimmer);
+  pwm->channel[zone + 1] = scale16(fade, dimmer);
 #endif
 }
