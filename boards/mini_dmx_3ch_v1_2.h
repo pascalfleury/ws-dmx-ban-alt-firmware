@@ -2,7 +2,7 @@
 #define BOARD_MINI_DMX_3CH_V1_2_H
 
 #include <mcs51/8051.h>
-#include "../stc15w.h"
+#include "../stc8h.h"
 
 /* Board: MINI-DMX-3CH-V1.2
  * Maps physical ports to logical names.
