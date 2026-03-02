@@ -6,4 +6,4 @@ void dipInit();
 unsigned short readDmxAddr();
 unsigned char readFunctionDip();
 
-#endif
+#endif /* DIP_H */

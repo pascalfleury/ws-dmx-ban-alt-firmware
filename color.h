@@ -16,4 +16,4 @@
  */
 void colorCompute(const DmxState *state, PwmState *pwm);
 
-#endif
+#endif /* COLOR_H */

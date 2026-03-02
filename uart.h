@@ -19,4 +19,4 @@ void uartClearFrameFlag(void);
  * Returns 1 on success, 0 if offset + len would exceed the buffer. */
 unsigned char uartGetData(unsigned char *dest, unsigned short offset, unsigned char len);
 
-#endif
+#endif /* UART_H */

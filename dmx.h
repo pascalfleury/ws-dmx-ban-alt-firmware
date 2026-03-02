@@ -49,4 +49,4 @@ unsigned char dmxAddressValid(void);
  * Only call this when dmxAddressValid() returns 1. */
 unsigned char dmxUpdate(DmxState *state);
 
-#endif
+#endif /* DMX_H */

@@ -57,4 +57,4 @@
 #define LED_P3M0_MASK 0x30
 #define LED_P2M0_MASK 0x7E
 
-#endif
+#endif /* BOARD_MINI_DMX_3CH_V1_2_H */

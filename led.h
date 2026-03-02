@@ -12,4 +12,4 @@ void ledOnFrame(void);
  * hasError: 1 = flash error pattern, 0 = normal operation. */
 void ledUpdate(unsigned char hasError);
 
-#endif
+#endif /* LED_H */

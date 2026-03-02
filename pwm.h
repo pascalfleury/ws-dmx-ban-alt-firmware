@@ -21,4 +21,4 @@ void pwmUpdate(const PwmState *state);
 /* Set PWM duty cycle for an individual channel (0-based index, 0-65535) */
 void pwmSetChannel(unsigned char ch, unsigned short duty);
 
-#endif
+#endif /* PWM_H */
