@@ -1,30 +1,27 @@
 #include "dmx.h"
 #include "dip.h"
 #include "uart.h"
+#include "numeric.h"
+
+/* Number of DMX channels per mode, indexed by dmx_mode_t */
+static const unsigned char dmxNumChannels[] = {
+  DMX_SIMPLE_NUM_CHANNELS, /* DMX_MODE_SIMPLE */
+  DMX_FULL_NUM_CHANNELS    /* DMX_MODE_FULL */
+};
+
+#define DMX_MAX_CHANNELS max(DMX_SIMPLE_NUM_CHANNELS, DMX_FULL_NUM_CHANNELS)
 
 dmx_mode_t dmxGetMode(void)
 {
-  if (readFunctionDip()) {
-    return DMX_MODE_FULL;
-  }
-  return DMX_MODE_SIMPLE;
+  return readFunctionDip() ? DMX_MODE_FULL
+                           : DMX_MODE_SIMPLE;
 }
 
 unsigned short dmxGetAddress(void)
 {
-  unsigned short addr;
+  unsigned short addr = readDmxAddr();
   unsigned short maxAddr;
-  unsigned char numChannels;
-
-  /* Read address from DIP switches */
-  addr = readDmxAddr();
-
-  /* Determine number of channels based on mode */
-  if (dmxGetMode() == DMX_MODE_FULL) {
-    numChannels = DMX_FULL_NUM_CHANNELS;
-  } else {
-    numChannels = DMX_SIMPLE_NUM_CHANNELS;
-  }
+  unsigned char numChannels = dmxNumChannels[dmxGetMode()];
 
   /* Clamp address to valid range */
   if (addr == 0) {
@@ -82,16 +79,12 @@ void dmxInit(DmxState *state)
 unsigned char dmxUpdate(DmxState *state)
 {
   unsigned char numChannels;
-  unsigned char raw[DMX_FULL_NUM_CHANNELS];
+  unsigned char raw[DMX_MAX_CHANNELS];
 
   state->mode = dmxGetMode();
   state->address = dmxGetAddress();
 
-  if (state->mode == DMX_MODE_FULL) {
-    numChannels = DMX_FULL_NUM_CHANNELS;
-  } else {
-    numChannels = DMX_SIMPLE_NUM_CHANNELS;
-  }
+  numChannels = dmxNumChannels[state->mode];
 
   /* If a new frame has been received, decode it */
   if (uartHasNewFrame()) {
