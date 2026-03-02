@@ -2,8 +2,6 @@
 #include "dip.h"
 #include "uart.h"
 
-DmxState dmxState = {0, 0, 0, 0, DMX_MODE_SIMPLE, 0};
-
 dmx_mode_t dmxGetMode(void)
 {
   if (readFunctionDip()) {
@@ -41,21 +39,21 @@ unsigned short dmxGetAddress(void)
   return addr;
 }
 
-/* Decode raw bytes into dmxChannels for simple mode (4 channels):
+/* Decode raw bytes for simple mode (4 channels):
  *   raw[0] = dimmer coarse
  *   raw[1] = color temperature coarse
  *   raw[2] = strobe mode
  *   raw[3] = strobe speed
  * Coarse values are shifted left by 8 to fill 16-bit range. */
-static void decodeSimple(unsigned char *raw)
+static void decodeSimple(DmxState *state, unsigned char *raw)
 {
-  dmxState.dimmer      = (unsigned short)raw[0] << 8;
-  dmxState.colorTemp   = (unsigned short)raw[1] << 8;
-  dmxState.strobeMode  = raw[2];
-  dmxState.strobeSpeed = raw[3];
+  state->dimmer      = (unsigned short)raw[0] << 8;
+  state->colorTemp   = (unsigned short)raw[1] << 8;
+  state->strobeMode  = raw[2];
+  state->strobeSpeed = raw[3];
 }
 
-/* Decode raw bytes into dmxChannels for full mode (6 channels):
+/* Decode raw bytes for full mode (6 channels):
  *   raw[0] = dimmer coarse
  *   raw[1] = dimmer fine
  *   raw[2] = color temperature coarse
@@ -63,23 +61,33 @@ static void decodeSimple(unsigned char *raw)
  *   raw[4] = strobe mode
  *   raw[5] = strobe speed
  * Coarse/fine pairs are combined: (coarse << 8) | fine. */
-static void decodeFull(unsigned char *raw)
+static void decodeFull(DmxState *state, unsigned char *raw)
 {
-  dmxState.dimmer      = ((unsigned short)raw[0] << 8) | raw[1];
-  dmxState.colorTemp   = ((unsigned short)raw[2] << 8) | raw[3];
-  dmxState.strobeMode  = raw[4];
-  dmxState.strobeSpeed = raw[5];
+  state->dimmer      = ((unsigned short)raw[0] << 8) | raw[1];
+  state->colorTemp   = ((unsigned short)raw[2] << 8) | raw[3];
+  state->strobeMode  = raw[4];
+  state->strobeSpeed = raw[5];
 }
 
-void dmxUpdate(void)
+void dmxInit(DmxState *state)
+{
+  state->mode        = dmxGetMode();
+  state->address     = dmxGetAddress();
+  state->dimmer      = 0;
+  state->colorTemp   = 0;
+  state->strobeMode  = 0;
+  state->strobeSpeed = 0;
+}
+
+unsigned char dmxUpdate(DmxState *state)
 {
   unsigned char numChannels;
   unsigned char raw[DMX_FULL_NUM_CHANNELS];
 
-  dmxState.mode = dmxGetMode();
-  dmxState.address = dmxGetAddress();
+  state->mode = dmxGetMode();
+  state->address = dmxGetAddress();
 
-  if (dmxState.mode == DMX_MODE_FULL) {
+  if (state->mode == DMX_MODE_FULL) {
     numChannels = DMX_FULL_NUM_CHANNELS;
   } else {
     numChannels = DMX_SIMPLE_NUM_CHANNELS;
@@ -91,12 +99,15 @@ void dmxUpdate(void)
 
     /* DMA buffer is 0-based (index 0 = DMX channel 1).
      * Our address is 1-based, so offset = address - 1. */
-    uartGetDmxData(raw, dmxState.address - 1, numChannels);
-
-    if (dmxState.mode == DMX_MODE_FULL) {
-      decodeFull(raw);
-    } else {
-      decodeSimple(raw);
+    if (uartGetDmxData(raw, state->address - 1, numChannels)) {
+      if (state->mode == DMX_MODE_FULL) {
+        decodeFull(state, raw);
+      } else {
+        decodeSimple(state, raw);
+      }
+      return 1;
     }
   }
+
+  return 0;
 }

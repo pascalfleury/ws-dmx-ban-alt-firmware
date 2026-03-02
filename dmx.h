@@ -23,16 +23,14 @@ typedef enum {
  *   address     - current DMX base address (1-based, clamped)
  */
 typedef struct {
+  dmx_mode_t mode;            /* current mode */
+  unsigned short address;     /* current base address */
+
   unsigned short dimmer;      /* general dimmer (coarse + fine) */
   unsigned short colorTemp;   /* color temperature (coarse + fine) */
   unsigned char strobeMode;   /* strobe mode */
   unsigned char strobeSpeed;  /* strobe speed */
-  dmx_mode_t mode;            /* current mode */
-  unsigned short address;     /* current base address */
 } DmxState;
-
-/* Current decoded DMX state, updated by dmxUpdate() */
-extern DmxState dmxState;
 
 /* Returns the current DMX mode based on the function DIP switch */
 dmx_mode_t dmxGetMode(void);
@@ -40,9 +38,15 @@ dmx_mode_t dmxGetMode(void);
 /* Returns the current DMX base address (1-based, clamped) */
 unsigned short dmxGetAddress(void);
 
+/* Initialize a DmxState struct to sensible defaults.
+ * Sets mode and address from DIP switches, and all
+ * channel values to safe defaults (off, no strobe). */
+void dmxInit(DmxState *state);
+
 /* Checks for a new DMX frame and if present, decodes the
- * relevant channels into dmxState based on the current mode.
- * Call this regularly from the main loop. */
-void dmxUpdate(void);
+ * relevant channels into the provided state based on the current mode.
+ * Always updates mode and address from DIP switches.
+ * Returns 1 if channel data was updated, 0 if no new frame. */
+unsigned char dmxUpdate(DmxState *state);
 
 #endif

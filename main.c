@@ -31,9 +31,11 @@ inline void flickerPwrLed()
 
 void main()
 {
+    DmxState dmxState;
+
     dipInit();
 
-    dmxUpdate();
+    dmxInit(&dmxState);
 
     uartInit(); //initially sets AUXR
     ledInit(); //modifies AUXR
@@ -43,7 +45,7 @@ void main()
     while(1)
     {
         flickerPwrLed();
-        dmxUpdate();
+        dmxUpdate(&dmxState);
 
         /* TODO: use dmxState.dimmer, dmxState.colorTemp,
          *       dmxState.strobeMode, dmxState.strobeSpeed
