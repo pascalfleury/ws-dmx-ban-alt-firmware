@@ -100,21 +100,53 @@ This exposes these channels:
 5. strobe mode
 6. strobe speed
 
-* Development Environment
-** Dev tools
+* Software
+** Development Environment
+*** Dev tools
 I use only open-source tools. do not suggest any non-open tools.
 Building: sdcc on platformio
 Flashing: stcgal
 Debugging: printf along with a terminal
 
-** Global Coding Rules
-*** Functionality
+*** Global Coding Rules
+**** Functionality
 - Never use floating point (strict constraint).
 - All DMX buffer logic must reside in ~dmx.c~.
 
-*** Style
+**** Style
 Always use the '1TBS' (One True Brace Style) for C code.
   - Braces on the same line as 'if', 'while', 'for'.
   - Use 2 spaces for indentation (no tabs).
   - Keep the 'else' on the same line as the closing brace: '} else {'.
 Do not try to fix style yourself at the end, I will do it.
+** Code Structure
+
+The code is split into files that have a *.h and a *.c file. These are the responsibilities of each file:
+
+- stc8h.h / config.h
+  Some specific definitions for the CPU.
+  Config for the system clock and baud rate.
+
+- boards/*.h
+  Contains the mapping from hardware I/O pins to logical names, one file for each supported board.
+
+- uart.h / uart.c
+  reads the DMX frames, and deals with interrupts, DMA, etc. It reads the full frame, or at least all that comes through the wire (when some frames get clipped).
+  Contains the volatile data buffer, as well as a way to check if there is a new frame.
+
+- dip.h / dip.c
+  interfaces to the setup of the board, reads the DIP switches to get the mode and the DMS address.
+
+- dmx.h / dmx.c
+  Defines the modes (as an enum) and the =DmxState= struct that has the values for all possible channels, possibly 16 bit values.
+  It gets the address dip.h and the data from uart.h and selects the subset of values which are the data for the current device.
+  It contains the parser for this data into the  DmxState structure.
+
+- pwm.h / pwm.c
+  Sets up the PWM machinery and pins, and provides functions to set each channel to the correct level with a 16 bit value.
+
+- color.h / color.c
+  Contains the mapping from a particular color temperature (as represented in the DmxState struct) and its mapping to the set of LEDs that are hooked up the board. This computes which mix of the several LEDs are needed to get a particular color temperature.
+
+- main.c
+  This sets up the subsystems, then implements the global loop as well as the DMX led blinking logic.
