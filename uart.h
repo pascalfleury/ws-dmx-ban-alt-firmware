@@ -17,6 +17,6 @@ void uartClearFrameFlag(void);
 /* Copy @p len bytes from the DMA receive buffer starting at
  * @p offset (0-based, where 0 = DMX channel 1) into @p dest.
  * Returns 1 on success, 0 if offset + len would exceed the buffer. */
-unsigned char uartGetDmxData(unsigned char *dest, unsigned short offset, unsigned char len);
+unsigned char uartGetData(unsigned char *dest, unsigned short offset, unsigned char len);
 
 #endif

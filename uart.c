@@ -8,7 +8,7 @@
 /* DMA receive buffer in xdata.
  * Index 0 = DMX channel 1 (first byte after start code).
  * Always receives full 512 bytes (or until next break). */
-static __xdata volatile unsigned char dmxDmaBuffer[512];
+static volatile __xdata unsigned char dmxDmaBuffer[512];
 
 static volatile unsigned char newFrameFlag = 0;
 
@@ -93,7 +93,7 @@ void uartClearFrameFlag(void)
   newFrameFlag = 0;
 }
 
-unsigned char uartGetDmxData(unsigned char *dest, unsigned short offset, unsigned char len)
+unsigned char uartGetData(unsigned char *dest, unsigned short offset, unsigned char len)
 {
   unsigned char i;
   if (offset + len > 512) {

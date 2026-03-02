@@ -92,7 +92,7 @@ unsigned char dmxUpdate(DmxState *state)
 
     /* DMA buffer is 0-based (index 0 = DMX channel 1).
      * Our address is 1-based, so offset = address - 1. */
-    if (uartGetDmxData(raw, state->address - 1, numChannels)) {
+    if (uartGetData(raw, state->address - 1, numChannels)) {
       if (state->mode == DMX_MODE_FULL) {
         decodeFull(state, raw);
       } else {
