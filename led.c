@@ -1,23 +1,19 @@
 #include "led.h"
 #include "board.h"
 
-/* Error blink pattern as a bitmask.
- * Each bit represents one time slot of ERROR_SLOT_DURATION
- * loop iterations. Bit 0 (LSB) is played first.
+/* Error blink pattern as a bitmask, played MSB first (left-to-right).
+ * Each bit represents one time slot of ERROR_SLOT_DURATION loop iterations.
  * 1 = LED on, 0 = LED off.
  *
- * Pattern: 3 fast blinks then a pause
- *   0b00000000 00010101 = 0x0015
- *   slot 0: ON   (blink 1 on)
- *   slot 1: OFF  (blink 1 off)
- *   slot 2: ON   (blink 2 on)
- *   slot 3: OFF  (blink 2 off)
- *   slot 4: ON   (blink 3 on)
- *   slots 5-15: OFF (pause)
+ * Binary: 1010 1010 0000 0000
+ *         ^^^^ ^
+ *         4 blinks then pause
+ *
+ * Hex:    0xA800
  */
-#define ERROR_PATTERN       0x0015
+#define ERROR_SLOT_DURATION 5000   /* ~50ms per slot at ~10µs/iteration */
+#define ERROR_PATTERN       0xA800
 #define ERROR_PATTERN_LEN   16
-#define ERROR_SLOT_DURATION 5000  /* ~50ms per slot at ~10µs/iteration */
 
 /* Timeout: turn LED off if no frame for this many iterations (~500ms) */
 #define DMX_LED_TIMEOUT 50000
@@ -43,8 +39,8 @@ void ledOnFrame(void)
 void ledUpdate(unsigned char hasError)
 {
   if (hasError) {
-    /* Set LED based on current bit in the pattern */
-    DMX_LED = (ERROR_PATTERN >> slotIdx) & 1;
+    /* Set LED based on current bit in the pattern (MSB first) */
+    DMX_LED = (ERROR_PATTERN >> (ERROR_PATTERN_LEN - 1 - slotIdx)) & 1;
 
     slotCount++;
     if (slotCount >= ERROR_SLOT_DURATION) {
