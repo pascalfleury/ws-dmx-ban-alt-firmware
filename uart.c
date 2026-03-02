@@ -8,7 +8,7 @@
 /* DMA receive buffer in xdata.
  * Index 0 = DMX channel 1 (first byte after start code).
  * Always receives full 512 bytes (or until next break). */
-static volatile __xdata unsigned char dmxDmaBuffer[512];
+static __xdata volatile unsigned char dmxDmaBuffer[512];
 
 static volatile unsigned char newFrameFlag = 0;
 
@@ -169,7 +169,6 @@ void uartInterrupt() __interrupt(SI0_VECTOR) __using(1)
       if(RB8 == 0) {
         dmaStopReceive();
         newFrameFlag = 1;
-        PWR_LED = 1;
         dmxState = DMX_WAIT_START_CODE;
       }
       /* else: shouldn't happen, DMA handles data bytes */
@@ -194,7 +193,6 @@ void dmaUart1RInterrupt() __interrupt(DMA_UR1R_VECTOR) __using(1)
   } else {
     /* All 512 bytes received */
     newFrameFlag = 1;
-    PWR_LED = 1;
     dmxState = DMX_WAIT_BREAK;
   }
 }

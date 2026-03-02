@@ -17,24 +17,6 @@ static dmx_mode_t dmxGetMode(void)
                            : DMX_MODE_SIMPLE;
 }
 
-static unsigned short dmxGetAddress(void)
-{
-  unsigned short addr = readDmxAddr();
-  unsigned short maxAddr;
-  unsigned char numChannels = dmxNumChannels[dmxGetMode()];
-
-  /* Clamp address to valid range */
-  if (addr == 0) {
-    addr = 1;
-  }
-
-  maxAddr = 512 - numChannels;
-  if (addr > maxAddr) {
-    addr = maxAddr;
-  }
-
-  return addr;
-}
 
 /* Decode raw bytes for simple mode (4 channels):
  *   raw[0] = dimmer coarse
@@ -69,11 +51,21 @@ static void decodeFull(DmxState *state, unsigned char *raw)
 void dmxInit(DmxState *state)
 {
   state->mode        = dmxGetMode();
-  state->address     = dmxGetAddress();
+  state->address     = readDmxAddr();
   state->dimmer      = 0;
   state->colorTemp   = 0;
   state->strobeMode  = 0;
   state->strobeSpeed = 0;
+}
+
+unsigned char dmxAddressValid(void)
+{
+  dmx_mode_t mode = dmxGetMode();
+  unsigned char numChannels = dmxNumChannels[mode];
+  unsigned short address = readDmxAddr();
+
+  if (address == 0) return 0;
+  return (address + numChannels - 1) < 512;
 }
 
 unsigned char dmxUpdate(DmxState *state)
@@ -82,7 +74,7 @@ unsigned char dmxUpdate(DmxState *state)
   unsigned char raw[DMX_MAX_CHANNELS];
 
   state->mode = dmxGetMode();
-  state->address = dmxGetAddress();
+  state->address = readDmxAddr();
 
   numChannels = dmxNumChannels[state->mode];
 

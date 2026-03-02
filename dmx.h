@@ -24,7 +24,7 @@ typedef enum {
  */
 typedef struct {
   dmx_mode_t mode;            /* current mode */
-  unsigned short address;     /* current base address */
+  unsigned short address;     /* current base address (raw from DIP) */
 
   unsigned short dimmer;      /* general dimmer (coarse + fine) */
   unsigned short colorTemp;   /* color temperature (coarse + fine) */
@@ -37,10 +37,16 @@ typedef struct {
  * channel values to safe defaults (off, no strobe). */
 void dmxInit(DmxState *state);
 
+/* Returns 1 if the current DIP switch address and mode fit within the
+ * 512-channel DMX universe, 0 otherwise.
+ * Reads mode and address directly from DIP switches. */
+unsigned char dmxAddressValid(void);
+
 /* Checks for a new DMX frame and if present, decodes the
  * relevant channels into the provided state based on the current mode.
  * Always updates mode and address from DIP switches.
- * Returns 1 if channel data was updated, 0 if no new frame. */
+ * Returns 1 if channel data was updated, 0 if no new frame.
+ * Only call this when dmxAddressValid() returns 1. */
 unsigned char dmxUpdate(DmxState *state);
 
 #endif
