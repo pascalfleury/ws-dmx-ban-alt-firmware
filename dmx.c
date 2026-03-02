@@ -11,13 +11,13 @@ static const unsigned char dmxNumChannels[] = {
 
 #define DMX_MAX_CHANNELS max(DMX_SIMPLE_NUM_CHANNELS, DMX_FULL_NUM_CHANNELS)
 
-dmx_mode_t dmxGetMode(void)
+static dmx_mode_t dmxGetMode(void)
 {
   return readFunctionDip() ? DMX_MODE_FULL
                            : DMX_MODE_SIMPLE;
 }
 
-unsigned short dmxGetAddress(void)
+static unsigned short dmxGetAddress(void)
 {
   unsigned short addr = readDmxAddr();
   unsigned short maxAddr;

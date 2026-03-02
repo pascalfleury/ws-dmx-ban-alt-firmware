@@ -32,12 +32,6 @@ typedef struct {
   unsigned char strobeSpeed;  /* strobe speed */
 } DmxState;
 
-/* Returns the current DMX mode based on the function DIP switch */
-dmx_mode_t dmxGetMode(void);
-
-/* Returns the current DMX base address (1-based, clamped) */
-unsigned short dmxGetAddress(void);
-
 /* Initialize a DmxState struct to sensible defaults.
  * Sets mode and address from DIP switches, and all
  * channel values to safe defaults (off, no strobe). */
