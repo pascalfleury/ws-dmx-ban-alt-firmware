@@ -150,3 +150,6 @@ The code is split into files that have a *.h and a *.c file. These are the respo
 
 - main.c
   This sets up the subsystems, then implements the global loop as well as the DMX led blinking logic.
+
+- numeric.h
+  Contains some basic math functions.

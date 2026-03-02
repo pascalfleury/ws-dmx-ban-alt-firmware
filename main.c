@@ -1,6 +1,5 @@
 #include <mcs51/lint.h>
 #include "board.h"
-#include "delay.h"
 #include "uart.h"
 #include "dip.h"
 #include "dmx.h"

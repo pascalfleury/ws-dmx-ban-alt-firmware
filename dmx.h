@@ -2,6 +2,7 @@
 #define DMX_H
 
 #include "config.h"
+#include "numeric.h"
 
 typedef enum {
   DMX_MODE_SIMPLE = 0, /* 4 channels */
@@ -12,7 +13,8 @@ typedef enum {
 #define DMX_FULL_NUM_CHANNELS   6
 
 /* DMX data buffer, filled by UART DMA and used by application */
-extern volatile unsigned char dmxData[NUM_ADRESSES];
+#define NUM_ADDRESSES max(DMX_SIMPLE_NUM_CHANNELS, DMX_FULL_NUM_CHANNELS)
+extern volatile unsigned char dmxData[NUM_ADDRESSES];
 
 /* Returns the current DMX mode based on the function DIP switch */
 dmx_mode_t dmxGetMode(void);
