@@ -5,9 +5,9 @@
  * Each bit represents one time slot of ERROR_SLOT_DURATION loop iterations.
  * 1 = LED on, 0 = LED off.
  *
- * Binary: 1010 1010 0000 0000
+ * Binary: 1010 1000 0000 0000
  *         ^^^^ ^
- *         4 blinks then pause
+ *         3 blinks then pause
  *
  * Hex:    0xA800
  */

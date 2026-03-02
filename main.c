@@ -8,8 +8,6 @@
 #include "pwm.h"
 #include "color.h"
 
-
-
 void main()
 {
   DmxState dmxState;
@@ -17,7 +15,7 @@ void main()
 
   dipInit();
   pwmInit();
-  uartInit(); //initially sets AUXR
+  uartInit();
   ledInit();
 
   dmxInit(&dmxState);
