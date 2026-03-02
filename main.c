@@ -9,51 +9,51 @@
 #include "color.h"
 
 /* DMX LED modes:
- * - Normal: LED flickers when DMX data is received, off when no data.
- * - Error:  LED flashes in a recognizable pattern (e.g. address clamped).
+ * - Normal: LED toggles on each DMX frame (~44fps = visible flicker).
+ *           If no frames arrive for ~500ms, LED turns off.
+ * - Error:  LED flashes in a recognizable pattern (e.g. address invalid).
  *
  * Error pattern: 3 fast blinks followed by a pause.
  * Each blink is ~50ms on, ~50ms off. Pause is ~400ms.
- * At ~1 iteration per loop pass, we use a counter to time this.
+ * Timing assumes ~10µs per main loop iteration at 24MHz.
  */
 
-#define ERROR_BLINK_ON    50
-#define ERROR_BLINK_OFF   50
-#define ERROR_PAUSE       400
+#define ERROR_BLINK_ON    5000   /* ~50ms at 10µs/iteration */
+#define ERROR_BLINK_OFF   5000   /* ~50ms */
+#define ERROR_PAUSE       40000  /* ~400ms */
 #define ERROR_NUM_BLINKS  3
 
-/* Total length of one error pattern cycle */
 #define ERROR_CYCLE_LEN \
   (ERROR_NUM_BLINKS * (ERROR_BLINK_ON + ERROR_BLINK_OFF) + ERROR_PAUSE)
 
-static unsigned short dmxLedCounter = 0;
-static unsigned short dmxLedTimeout = 0;
+/* Timeout: turn LED off if no frame for this many iterations (~500ms) */
+#define DMX_LED_TIMEOUT 50000
 
-/* Called when a valid DMX frame is received */
+static unsigned long dmxLedCounter = 0;
+static unsigned long dmxLedNoFrameCount = 0;
+
+/* Called when a valid DMX frame is received.
+ * Toggles the LED to create visible flicker at frame rate. */
 static void dmxLedOnFrame(void)
 {
-  /* Brief flash: turn LED on, reset timeout */
-  DMX_LED = 1;
-  dmxLedTimeout = 0;
-  dmxLedCounter = 0;
+  DMX_LED = !DMX_LED;
+  dmxLedNoFrameCount = 0;
 }
 
 /* Update the DMX LED state.
- * In normal mode: LED was turned on by dmxLedOnFrame(),
- * turn it off after a short time. If no frames arrive,
- * LED stays off.
+ * In normal mode: track time since last frame, turn off if timeout.
  * In error mode: flash a recognizable pattern. */
 static void dmxLedUpdate(unsigned char hasError)
 {
   if (hasError) {
     /* Error pattern: 3 fast blinks + pause */
-    unsigned short pos = dmxLedCounter % ERROR_CYCLE_LEN;
-    unsigned short blinkPhase = ERROR_BLINK_ON + ERROR_BLINK_OFF;
-    unsigned short blinkEnd = ERROR_NUM_BLINKS * blinkPhase;
+    unsigned long pos = dmxLedCounter % ERROR_CYCLE_LEN;
+    unsigned long blinkPhase = ERROR_BLINK_ON + ERROR_BLINK_OFF;
+    unsigned long blinkEnd = ERROR_NUM_BLINKS * blinkPhase;
 
     if (pos < blinkEnd) {
       /* In blink region */
-      unsigned short withinBlink = pos % blinkPhase;
+      unsigned long withinBlink = pos % blinkPhase;
       if (withinBlink < ERROR_BLINK_ON) {
         DMX_LED = 1;
       } else {
@@ -69,15 +69,13 @@ static void dmxLedUpdate(unsigned char hasError)
       dmxLedCounter = 0;
     }
   } else {
-    /* Normal mode: turn off LED after a short delay.
-     * dmxLedOnFrame() turns it on when data arrives. */
-    if (DMX_LED) {
-      dmxLedTimeout++;
-      if (dmxLedTimeout > 2) {
-        DMX_LED = 0;
-        dmxLedTimeout = 0;
-      }
+    /* Normal mode: if no frames for timeout period, turn LED off */
+    dmxLedNoFrameCount++;
+    if (dmxLedNoFrameCount > DMX_LED_TIMEOUT) {
+      DMX_LED = 0;
+      dmxLedNoFrameCount = DMX_LED_TIMEOUT; /* clamp to prevent overflow */
     }
+    dmxLedCounter = 0; /* reset error pattern counter */
   }
 }
 
