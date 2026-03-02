@@ -2,7 +2,7 @@
 #include "dip.h"
 #include "uart.h"
 
-DmxState dmxState;
+DmxState dmxState = {0, 0, 0, 0, DMX_MODE_SIMPLE, 0};
 
 dmx_mode_t dmxGetMode(void)
 {
