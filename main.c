@@ -45,8 +45,8 @@ void main()
         flickerPwrLed();
         dmxUpdate();
 
-        /* TODO: use dmxChannels.dimmer, dmxChannels.colorTemp,
-         *       dmxChannels.strobeMode, dmxChannels.strobeSpeed
+        /* TODO: use dmxState.dimmer, dmxState.colorTemp,
+         *       dmxState.strobeMode, dmxState.strobeSpeed
          *       to drive PWM outputs and LED brightness */
     }
 }

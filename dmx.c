@@ -2,7 +2,7 @@
 #include "dip.h"
 #include "uart.h"
 
-dmx_channels_t dmxChannels;
+DmxState dmxState;
 
 dmx_mode_t dmxGetMode(void)
 {
@@ -49,10 +49,10 @@ unsigned short dmxGetAddress(void)
  * Coarse values are shifted left by 8 to fill 16-bit range. */
 static void decodeSimple(unsigned char *raw)
 {
-  dmxChannels.dimmer      = (unsigned short)raw[0] << 8;
-  dmxChannels.colorTemp   = (unsigned short)raw[1] << 8;
-  dmxChannels.strobeMode  = raw[2];
-  dmxChannels.strobeSpeed = raw[3];
+  dmxState.dimmer      = (unsigned short)raw[0] << 8;
+  dmxState.colorTemp   = (unsigned short)raw[1] << 8;
+  dmxState.strobeMode  = raw[2];
+  dmxState.strobeSpeed = raw[3];
 }
 
 /* Decode raw bytes into dmxChannels for full mode (6 channels):
@@ -65,23 +65,21 @@ static void decodeSimple(unsigned char *raw)
  * Coarse/fine pairs are combined: (coarse << 8) | fine. */
 static void decodeFull(unsigned char *raw)
 {
-  dmxChannels.dimmer      = ((unsigned short)raw[0] << 8) | raw[1];
-  dmxChannels.colorTemp   = ((unsigned short)raw[2] << 8) | raw[3];
-  dmxChannels.strobeMode  = raw[4];
-  dmxChannels.strobeSpeed = raw[5];
+  dmxState.dimmer      = ((unsigned short)raw[0] << 8) | raw[1];
+  dmxState.colorTemp   = ((unsigned short)raw[2] << 8) | raw[3];
+  dmxState.strobeMode  = raw[4];
+  dmxState.strobeSpeed = raw[5];
 }
 
 void dmxUpdate(void)
 {
-  unsigned short addr;
   unsigned char numChannels;
   unsigned char raw[DMX_FULL_NUM_CHANNELS];
-  dmx_mode_t mode;
 
-  mode = dmxGetMode();
-  addr = dmxGetAddress();
+  dmxState.mode = dmxGetMode();
+  dmxState.address = dmxGetAddress();
 
-  if (mode == DMX_MODE_FULL) {
+  if (dmxState.mode == DMX_MODE_FULL) {
     numChannels = DMX_FULL_NUM_CHANNELS;
   } else {
     numChannels = DMX_SIMPLE_NUM_CHANNELS;
@@ -92,10 +90,10 @@ void dmxUpdate(void)
     uartClearFrameFlag();
 
     /* DMA buffer is 0-based (index 0 = DMX channel 1).
-     * Our address is 1-based, so offset = addr - 1. */
-    uartGetDmxData(raw, addr - 1, numChannels);
+     * Our address is 1-based, so offset = address - 1. */
+    uartGetDmxData(raw, dmxState.address - 1, numChannels);
 
-    if (mode == DMX_MODE_FULL) {
+    if (dmxState.mode == DMX_MODE_FULL) {
       decodeFull(raw);
     } else {
       decodeSimple(raw);
