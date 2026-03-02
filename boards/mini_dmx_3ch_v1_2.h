@@ -11,11 +11,6 @@
 /* Number of hardware PWM channels on this board */
 #define NUM_PWM_CHANNELS 3
 
-/* Color temperatures of the LEDs on each PWM channel (in Kelvin).
- * Must be listed in ascending order (warmest first).
- * Array length must equal NUM_PWM_CHANNELS. */
-#define PWM_COLOR_TEMPS { 2700, 4000, 6500 }
-
 /* PWM outputs */
 #define PWM_1       P1_4
 #define PWM_2       P1_2

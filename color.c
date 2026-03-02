@@ -69,3 +69,57 @@ void colorCompute(const DmxState *state, PwmState *pwm)
   pwm->channel[zone + 1] = scale16(fade, dimmer);
 #endif
 }
+#include "color.h"
+#include "numeric.h"
+#include "config.h"
+
+/* Color temperatures for each channel, defined in config.
+ * Must be in ascending order (warmest to coldest). */
+static const unsigned short colorTemps[NUM_COLOR_CHANNELS] = COLOR_TEMPS;
+
+void colorCompute(const DmxState *dmxState, PwmState *pwmState)
+{
+  unsigned short dimmer = dmxState->dimmer;
+  unsigned short colorTemp = dmxState->colorTemp;
+  unsigned char zone;
+  unsigned short zoneSize;
+  unsigned short posInZone;
+  unsigned long warm, cold;
+  unsigned char i;
+
+  /* Initialize all channels to 0 */
+  for (i = 0; i < NUM_PWM_CHANNELS; i++) {
+    pwm->channel[i] = 0;
+  }
+
+#if NUM_COLOR_CHANNELS == 1
+  /* Single channel: just apply dimmer */
+  pwm->channel[0] = dimmer;
+  return;
+#else
+  /* Number of zones = NUM_COLOR_CHANNELS - 1 */
+  /* Each zone spans (0x10000 / numZones) of the colorTemp range */
+  zoneSize = 0xFFFF / (NUM_COLOR_CHANNELS - 1);
+
+  /* Determine which zone we're in */
+  zone = colorTemp / zoneSize;
+
+  /* Clamp to last zone */
+  if (zone >= NUM_COLOR_CHANNELS - 1) {
+    zone = NUM_COLOR_CHANNELS - 2;
+  }
+
+  /* Position within the zone (0-65535) */
+  posInZone = colorTemp - (zone * zoneSize);
+
+  /* Linear interpolation between warm (zone) and cold (zone+1).
+   * warm = (zoneSize - posInZone) / zoneSize
+   * cold = posInZone / zoneSize
+   * Scale by dimmer and use 32-bit to avoid overflow. */
+  warm = ((unsigned long)(zoneSize - posInZone) * dimmer) / zoneSize;
+  cold = ((unsigned long)posInZone * dimmer) / zoneSize;
+
+  pwm->channel[zone] = (unsigned short)warm;
+  pwm->channel[zone + 1] = (unsigned short)cold;
+#endif
+}

@@ -14,3 +14,16 @@
 void colorCompute(const DmxState *state, PwmState *pwm);
 
 #endif
+#ifndef COLOR_H
+#define COLOR_H
+
+#include "dmx.h"
+#include "pwm.h"
+
+/* Compute PWM channel values from DMX state.
+ * Takes the dimmer and color temperature from dmxState,
+ * and fills in the pwmState with the appropriate duty cycles
+ * for each PWM channel to achieve the desired color temperature. */
+void colorCompute(const DmxState *dmxState, PwmState *pwmState);
+
+#endif
