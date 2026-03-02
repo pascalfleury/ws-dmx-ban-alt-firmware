@@ -1,33 +1,36 @@
 #include "led.h"
 #include "board.h"
 
-/* Error pattern: {on, off, on, off, ..., 0}
- * Each value is a duration in loop iterations (~10µs each at 24MHz).
- * LED starts ON for the first value, OFF for the second, etc.
- * A 0 terminates the pattern and it restarts.
- * Pattern: 3 fast blinks (50ms on, 50ms off) then a long pause (450ms). */
-static const unsigned short errorPattern[] = {
-  5000,   /* ON  ~50ms */
-  5000,   /* OFF ~50ms */
-  5000,   /* ON  ~50ms */
-  5000,   /* OFF ~50ms */
-  5000,   /* ON  ~50ms */
-  45000,  /* OFF ~450ms */
-  0       /* end of pattern, restart */
-};
+/* Error blink pattern as a bitmask.
+ * Each bit represents one time slot of ERROR_SLOT_DURATION
+ * loop iterations. Bit 0 (LSB) is played first.
+ * 1 = LED on, 0 = LED off.
+ *
+ * Pattern: 3 fast blinks then a pause
+ *   0b00000000 00010101 = 0x0015
+ *   slot 0: ON   (blink 1 on)
+ *   slot 1: OFF  (blink 1 off)
+ *   slot 2: ON   (blink 2 on)
+ *   slot 3: OFF  (blink 2 off)
+ *   slot 4: ON   (blink 3 on)
+ *   slots 5-15: OFF (pause)
+ */
+#define ERROR_PATTERN       0x0015
+#define ERROR_PATTERN_LEN   16
+#define ERROR_SLOT_DURATION 5000  /* ~50ms per slot at ~10µs/iteration */
 
 /* Timeout: turn LED off if no frame for this many iterations (~500ms) */
 #define DMX_LED_TIMEOUT 50000
 
-static unsigned char patternIdx = 0;
-static unsigned short patternCount = 0;
+static unsigned char slotIdx = 0;
+static unsigned short slotCount = 0;
 static unsigned long noFrameCount = 0;
 
 void ledInit(void)
 {
   DMX_LED = 0;
-  patternIdx = 0;
-  patternCount = 0;
+  slotIdx = 0;
+  slotCount = 0;
   noFrameCount = 0;
 }
 
@@ -40,15 +43,15 @@ void ledOnFrame(void)
 void ledUpdate(unsigned char hasError)
 {
   if (hasError) {
-    /* Set LED state: even indices = ON, odd indices = OFF */
-    DMX_LED = !(patternIdx & 1);
+    /* Set LED based on current bit in the pattern */
+    DMX_LED = (ERROR_PATTERN >> slotIdx) & 1;
 
-    patternCount++;
-    if (patternCount >= errorPattern[patternIdx]) {
-      patternCount = 0;
-      patternIdx++;
-      if (errorPattern[patternIdx] == 0) {
-        patternIdx = 0;
+    slotCount++;
+    if (slotCount >= ERROR_SLOT_DURATION) {
+      slotCount = 0;
+      slotIdx++;
+      if (slotIdx >= ERROR_PATTERN_LEN) {
+        slotIdx = 0;
       }
     }
   } else {
@@ -59,7 +62,7 @@ void ledUpdate(unsigned char hasError)
       noFrameCount = DMX_LED_TIMEOUT; /* clamp to prevent overflow */
     }
     /* Reset error pattern so it starts fresh if error recurs */
-    patternIdx = 0;
-    patternCount = 0;
+    slotIdx = 0;
+    slotCount = 0;
   }
 }
