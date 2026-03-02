@@ -129,6 +129,7 @@ The code is split into files that have a *.h and a *.c file. These are the respo
 
 - boards/*.h
   Contains the mapping from hardware I/O pins to logical names, one file for each supported board.
+  also contains the number of PWM channels that are in the hardware of the board.
 
 - uart.h / uart.c
   reads the DMX frames, and deals with interrupts, DMA, etc. It reads the full frame, or at least all that comes through the wire (when some frames get clipped).
@@ -144,6 +145,8 @@ The code is split into files that have a *.h and a *.c file. These are the respo
 
 - pwm.h / pwm.c
   Sets up the PWM machinery and pins, and provides functions to set each channel to the correct level with a 16 bit value.
+  It also defines a pwmState struct that contains as many channels as are configured for the board.
+  the pwmUpdate() takes such a structure and sets all relevant pwm to the duty cycle in that struct.
 
 - color.h / color.c
   Contains the mapping from a particular color temperature (as represented in the DmxState struct) and its mapping to the set of LEDs that are hooked up the board. This computes which mix of the several LEDs are needed to get a particular color temperature.
