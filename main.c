@@ -3,10 +3,10 @@
 #include "delay.h"
 #include "uart.h"
 #include "dip.h"
+#include "dmx.h"
 #include "config.h"
 #include "leds.h"
 
-extern volatile unsigned char dmxData[NUM_ADRESSES]; //defined in uart.c
 extern unsigned char ledBrightness[NUM_LEDS]; //defined in leds.c
 
 //used to clicker the power led
@@ -32,11 +32,9 @@ inline void flickerPwrLed()
 
 void main()
 {
-    unsigned short masterBrightness = 0;
-
     dipInit();
 
-    readDipSwitch();
+    dmxUpdate();
 
     uartInit(); //initially sets AUXR
     ledInit(); //modifies AUXR
@@ -46,23 +44,10 @@ void main()
     while(1)
     {
         flickerPwrLed();
-        readDipSwitch();
+        dmxUpdate();
 
-        masterBrightness = dmxData[0];
-
-        // The master scaling is done in fixed point math with scale 255
-        // 255 was chosen because it allows to ommit scaling of masterBrightness
-        // and is close to the theoretical maximum scale of 257 
-        // (255*257=biggest possible unsigned short).
-
-        //loop unrolled for performance reasons
-        ledBrightness[0] = (dmxData[2] * masterBrightness) / 255;
-        ledBrightness[1] = (dmxData[3] * masterBrightness) / 255;
-        ledBrightness[2] = (dmxData[4] * masterBrightness) / 255;
-        ledBrightness[3] = (dmxData[5] * masterBrightness) / 255;
-        ledBrightness[4] = (dmxData[6] * masterBrightness) / 255;
-        ledBrightness[5] = (dmxData[7] * masterBrightness) / 255;
-        ledBrightness[6] = (dmxData[8] * masterBrightness) / 255;
-        ledBrightness[7] = (dmxData[9] * masterBrightness) / 255;
+        /* TODO: use dmxChannels.dimmer, dmxChannels.colorTemp,
+         *       dmxChannels.strobeMode, dmxChannels.strobeSpeed
+         *       to drive PWM outputs and LED brightness */
     }
 }

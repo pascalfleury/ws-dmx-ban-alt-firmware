@@ -1,0 +1,104 @@
+#include "dmx.h"
+#include "dip.h"
+#include "uart.h"
+
+dmx_channels_t dmxChannels;
+
+dmx_mode_t dmxGetMode(void)
+{
+  if (readFunctionDip()) {
+    return DMX_MODE_FULL;
+  }
+  return DMX_MODE_SIMPLE;
+}
+
+unsigned short dmxGetAddress(void)
+{
+  unsigned short addr;
+  unsigned short maxAddr;
+  unsigned char numChannels;
+
+  /* Read address from DIP switches */
+  addr = readDmxAddr();
+
+  /* Determine number of channels based on mode */
+  if (dmxGetMode() == DMX_MODE_FULL) {
+    numChannels = DMX_FULL_NUM_CHANNELS;
+  } else {
+    numChannels = DMX_SIMPLE_NUM_CHANNELS;
+  }
+
+  /* Clamp address to valid range */
+  if (addr == 0) {
+    addr = 1;
+  }
+
+  maxAddr = 512 - numChannels;
+  if (addr > maxAddr) {
+    addr = maxAddr;
+  }
+
+  return addr;
+}
+
+/* Decode raw bytes into dmxChannels for simple mode (4 channels):
+ *   raw[0] = dimmer coarse
+ *   raw[1] = color temperature coarse
+ *   raw[2] = strobe mode
+ *   raw[3] = strobe speed
+ * Coarse values are shifted left by 8 to fill 16-bit range. */
+static void decodeSimple(unsigned char *raw)
+{
+  dmxChannels.dimmer      = (unsigned short)raw[0] << 8;
+  dmxChannels.colorTemp   = (unsigned short)raw[1] << 8;
+  dmxChannels.strobeMode  = raw[2];
+  dmxChannels.strobeSpeed = raw[3];
+}
+
+/* Decode raw bytes into dmxChannels for full mode (6 channels):
+ *   raw[0] = dimmer coarse
+ *   raw[1] = dimmer fine
+ *   raw[2] = color temperature coarse
+ *   raw[3] = color temperature fine
+ *   raw[4] = strobe mode
+ *   raw[5] = strobe speed
+ * Coarse/fine pairs are combined: (coarse << 8) | fine. */
+static void decodeFull(unsigned char *raw)
+{
+  dmxChannels.dimmer      = ((unsigned short)raw[0] << 8) | raw[1];
+  dmxChannels.colorTemp   = ((unsigned short)raw[2] << 8) | raw[3];
+  dmxChannels.strobeMode  = raw[4];
+  dmxChannels.strobeSpeed = raw[5];
+}
+
+void dmxUpdate(void)
+{
+  unsigned short addr;
+  unsigned char numChannels;
+  unsigned char raw[DMX_FULL_NUM_CHANNELS];
+  dmx_mode_t mode;
+
+  mode = dmxGetMode();
+  addr = dmxGetAddress();
+
+  if (mode == DMX_MODE_FULL) {
+    numChannels = DMX_FULL_NUM_CHANNELS;
+  } else {
+    numChannels = DMX_SIMPLE_NUM_CHANNELS;
+  }
+
+  /* If a new frame has been received, decode it */
+  if (uartHasNewFrame()) {
+    uartClearFrameFlag();
+
+    /* DMA buffer is 0-based (index 0 = DMX channel 1).
+     * Our address is 1-based, so offset = addr - 1. */
+    uartGetDmxData(raw, addr - 1, numChannels);
+
+    if (mode == DMX_MODE_FULL) {
+      decodeFull(raw);
+    } else {
+      decodeSimple(raw);
+    }
+  }
+}

@@ -1,11 +1,8 @@
 #include "dip.h"
 #include <mcs51/lint.h>
 #include "board.h"
-#include "config.h"
 
 /* DIP switch mapping is defined in the board header */
-
-extern unsigned short dmxAddr; //defined in uart.c
 
 void dipInit()
 {
@@ -50,18 +47,4 @@ unsigned short readDmxAddr()
 unsigned char readFunctionDip()
 {
     return !DIP_10_MODE;
-}
-
-void readDipSwitch()
-{
-    dmxAddr = readDmxAddr();
-
-    if(dmxAddr == 0)
-    {
-        dmxAddr = 1;
-    }
-    if(dmxAddr > 512 - NUM_ADRESSES)
-    {
-        dmxAddr = 512 - NUM_ADRESSES;
-    }
 }

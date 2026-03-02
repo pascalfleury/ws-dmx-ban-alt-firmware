@@ -5,27 +5,27 @@
 #include "stc8h.h"
 #include "config.h"
 
-volatile unsigned char dmxData[NUM_ADRESSES];
-unsigned short dmxAddr = 0; //is written to from outside
-
 /* DMA receive buffer in xdata.
- * We receive up to 512 data bytes after the start code.
- * The DMA will write received bytes here, then we copy
- * the relevant slice into dmxData. */
+ * Index 0 = DMX channel 1 (first byte after start code).
+ * Always receives full 512 bytes (or until next break). */
 static __xdata volatile unsigned char dmxDmaBuffer[512];
+
+static volatile unsigned char newFrameFlag = 0;
 
 /* State machine for DMX reception:
  * WAIT_BREAK: waiting for a break (framing error, RB8=0)
  * WAIT_START_CODE: break seen, waiting for start code byte
- * DMA_ACTIVE: start code was valid, DMA is receiving data bytes
+ * DMA_FIRST_HALF: DMA is receiving first 256 bytes
+ * DMA_SECOND_HALF: DMA is receiving second 256 bytes
  */
-#define DMX_WAIT_BREAK      0
+#define DMX_WAIT_BREAK       0
 #define DMX_WAIT_START_CODE  1
-#define DMX_DMA_ACTIVE       2
+#define DMX_DMA_FIRST_HALF   2
+#define DMX_DMA_SECOND_HALF  3
 
 static volatile unsigned char dmxState = DMX_WAIT_BREAK;
 
-/* Start DMA reception for up to 512 bytes */
+/* Start DMA reception for first 256 bytes */
 static void dmaStartReceive()
 {
   P_SW2 |= EAXFR;
@@ -33,20 +33,13 @@ static void dmaStartReceive()
   /* Clear DMA status */
   DMA_UR1R_STA = 0x00;
 
-  /* Set DMA buffer address */
+  /* Set DMA buffer address (start of buffer) */
   DMA_UR1R_RXAH = (unsigned short)dmxDmaBuffer >> 8;
   DMA_UR1R_RXAL = (unsigned short)dmxDmaBuffer & 0xFF;
 
-  /* Set number of bytes to receive (AMT = count - 1) */
-  /* We want up to 512 bytes, but AMT is 8-bit (max 255).
-   * So we receive up to 256 bytes at a time (AMT=255).
-   * This is enough as long as dmxAddr + NUM_ADRESSES <= 256,
-   * which covers addresses 1-246 with 10 channels. */
-  if(dmxAddr + NUM_ADRESSES <= 256) {
-    DMA_UR1R_AMT = (unsigned char)(dmxAddr + NUM_ADRESSES - 1);
-  } else {
-    DMA_UR1R_AMT = 255;
-  }
+  /* AMT is 8-bit, so max is 255 (= 256 bytes).
+   * Receive first 256 bytes. */
+  DMA_UR1R_AMT = 255;
 
   DMA_UR1R_DONE = 0x00;
 
@@ -55,6 +48,26 @@ static void dmaStartReceive()
   DMA_UR1R_CR = 0xC1;
 
   /* Enable DMA interrupt (bit 0 = done interrupt enable) */
+  DMA_UR1R_CFG = 0x01;
+
+  P_SW2 &= ~EAXFR;
+}
+
+/* Start DMA reception for the second 256 bytes */
+static void dmaStartReceiveSecondHalf()
+{
+  P_SW2 |= EAXFR;
+
+  DMA_UR1R_STA = 0x00;
+
+  /* Point to second half of buffer (offset 256) */
+  DMA_UR1R_RXAH = (unsigned short)(dmxDmaBuffer + 256) >> 8;
+  DMA_UR1R_RXAL = (unsigned short)(dmxDmaBuffer + 256) & 0xFF;
+
+  DMA_UR1R_AMT = 255;
+  DMA_UR1R_DONE = 0x00;
+
+  DMA_UR1R_CR = 0xC1;
   DMA_UR1R_CFG = 0x01;
 
   P_SW2 &= ~EAXFR;
@@ -70,12 +83,31 @@ static void dmaStopReceive()
   P_SW2 &= ~EAXFR;
 }
 
+unsigned char uartHasNewFrame(void)
+{
+  return newFrameFlag;
+}
+
+void uartClearFrameFlag(void)
+{
+  newFrameFlag = 0;
+}
+
+unsigned char uartGetDmxData(unsigned char *dest, unsigned short offset, unsigned char len)
+{
+  unsigned char i;
+  if (offset + len > 512) {
+    return 0;
+  }
+  for (i = 0; i < len; i++) {
+    dest[i] = dmxDmaBuffer[offset + i];
+  }
+  return 1;
+}
+
 void uartInit()
 {
   int i = 0;
-  for(i = 0; i < NUM_ADRESSES; ++i) {
-    dmxData[i] = 0;
-  }
   for(i = 0; i < 512; ++i) {
     dmxDmaBuffer[i] = 0;
   }
@@ -123,19 +155,21 @@ void uartInterrupt() __interrupt(SI0_VECTOR) __using(1)
     } else if(dmxState == DMX_WAIT_START_CODE) {
       if(RB8 == 1 && dat == 0) {
         /* Valid start code (0x00) received.
-         * Start DMA to collect the data bytes. */
-        dmxState = DMX_DMA_ACTIVE;
+         * Start DMA to collect the first 256 data bytes. */
+        dmxState = DMX_DMA_FIRST_HALF;
         dmaStartReceive();
       } else {
         /* Invalid start code or another break, reset */
         dmxState = DMX_WAIT_BREAK;
       }
-    } else if(dmxState == DMX_DMA_ACTIVE) {
+    } else if(dmxState == DMX_DMA_FIRST_HALF || dmxState == DMX_DMA_SECOND_HALF) {
       /* If we get a UART interrupt while DMA is active,
        * it means we got a new break (RB8=0).
-       * Stop DMA and process whatever we got. */
+       * Stop DMA and signal frame complete. */
       if(RB8 == 0) {
         dmaStopReceive();
+        newFrameFlag = 1;
+        PWR_LED = 1;
         dmxState = DMX_WAIT_START_CODE;
       }
       /* else: shouldn't happen, DMA handles data bytes */
@@ -148,27 +182,19 @@ void uartInterrupt() __interrupt(SI0_VECTOR) __using(1)
  * Fires when DMA has received the requested number of bytes. */
 void dmaUart1RInterrupt() __interrupt(DMA_UR1R_VECTOR) __using(1)
 {
-  unsigned char i;
-
   P_SW2 |= EAXFR;
   DMA_UR1R_STA = 0x00; //clear DMA status
   DMA_UR1R_CR = 0x00;  //disable DMA
   P_SW2 &= ~EAXFR;
 
-  /* Copy relevant bytes from DMA buffer into dmxData.
-   * DMA buffer index 0 = DMX channel 1 (byte after start code).
-   * Our address range starts at dmxAddr (1-based),
-   * so buffer index = dmxAddr - 1. */
-  if(dmxAddr >= 1) {
-    unsigned short bufStart = dmxAddr - 1;
-    for(i = 0; i < NUM_ADRESSES; i++) {
-      dmxData[i] = dmxDmaBuffer[bufStart + i];
-    }
+  if(dmxState == DMX_DMA_FIRST_HALF) {
+    /* First 256 bytes received, start second half */
+    dmxState = DMX_DMA_SECOND_HALF;
+    dmaStartReceiveSecondHalf();
+  } else {
+    /* All 512 bytes received */
+    newFrameFlag = 1;
+    PWR_LED = 1;
+    dmxState = DMX_WAIT_BREAK;
   }
-
-  /* Signal DMX frame received by turning off power LED.
-   * Main loop turns it back on, creating flicker when DMX is present. */
-  PWR_LED = 1;
-
-  dmxState = DMX_WAIT_BREAK;
 }
