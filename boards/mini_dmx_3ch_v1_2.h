@@ -8,6 +8,9 @@
  * Maps physical ports to logical names.
  */
 
+/* Number of hardware PWM channels on this board */
+#define NUM_PWM_CHANNELS 3
+
 /* PWM outputs */
 #define PWM_1       P1_4
 #define PWM_2       P1_2
@@ -53,53 +56,5 @@
  */
 #define LED_P3M0_MASK 0x30
 #define LED_P2M0_MASK 0x7E
-
-#endif
-#ifndef BOARD_MINI_DMX_3CH_V1_2_H
-#define BOARD_MINI_DMX_3CH_V1_2_H
-
-#include <mcs51/8051.h>
-#include "stc15w.h"
-
-/* Number of hardware PWM channels on this board */
-#define NUM_PWM_CHANNELS 3
-
-/* DIP switches */
-#define DIP_1           P3_3
-#define DIP_2           P3_4
-#define DIP_3           P3_5
-#define DIP_4           P3_6
-#define DIP_5           P3_7
-#define DIP_6           P2_4
-#define DIP_7           P2_5
-#define DIP_8           P2_6
-#define DIP_9           P2_7
-#define DIP_10_MODE     P0_0
-
-/* PWM outputs */
-#define PWM_1       P1_4
-#define PWM_2       P1_2
-#define PWM_3       P1_0
-
-/* Status LEDs */
-#define DMX_LED     P3_2
-#define PWR_LED     P3_2
-
-/* UART */
-#define RxD         P3_0
-#define TxD         P3_1
-
-/* LED configuration for software PWM */
-#define LED_1       P3_2
-#define LED_2       P3_2
-#define LED_3       P3_2
-#define LED_4       P3_2
-#define LED_5       P3_2
-#define LED_6       P3_2
-#define LED_7       P3_2
-#define LED_8       P3_2
-
-#define LED_P3M0_MASK 0x04
-#define LED_P2M0_MASK 0x00
 
 #endif
