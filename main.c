@@ -4,7 +4,6 @@
 #include "dip.h"
 #include "dmx.h"
 #include "config.h"
-#include "leds.h"
 #include "led.h"
 #include "pwm.h"
 #include "color.h"
@@ -19,7 +18,6 @@ void main()
   dipInit();
   pwmInit();
   uartInit(); //initially sets AUXR
-  ledsInit(); //modifies AUXR
   ledInit();
 
   dmxInit(&dmxState);
