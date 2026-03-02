@@ -5,7 +5,7 @@
 //         if you change this number, also fix the loop
 #define NUM_LEDS 8
 
-void ledInit();
+void ledsInit(void);
 
 #define LEDS_H
 #endif

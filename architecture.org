@@ -156,6 +156,10 @@ The code is split into files that have a *.h and a *.c file. These are the respo
 
 - numeric.h
   Contains some basic math functions.
+
+- led.h / led.c
+  Contains code to make the DMX LED blink, either as a representation of arriving frames, or as blinking error pattern.
+
 ** DMX Led functionality
 The DMX led should essentially have 2 modes:
 - when there is normal operations, then it should flicker as DMX data is coming in, and if there is no DMx data, it should remain off.

@@ -22,7 +22,7 @@ volatile unsigned char ledBrightness[NUM_LEDS];
 //105728 interrupts/s ( every 9,45823us) = ~413hz led update rate 
 #define TIMER_START (65536-19) 
 
-void ledInit()
+void ledsInit()
 {
     LED_1 = 0;
     LED_2 = 0;
