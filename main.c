@@ -5,6 +5,8 @@
 #include "dmx.h"
 #include "config.h"
 #include "leds.h"
+#include "pwm.h"
+#include "color.h"
 
 extern unsigned char ledBrightness[NUM_LEDS]; //defined in leds.c
 
@@ -32,10 +34,13 @@ inline void flickerPwrLed()
 void main()
 {
     DmxState dmxState;
+    PwmState pwmState;
 
     dipInit();
 
     dmxInit(&dmxState);
+    pwmStateInit(&pwmState);
+    pwmInit();
 
     uartInit(); //initially sets AUXR
     ledInit(); //modifies AUXR
@@ -45,10 +50,10 @@ void main()
     while(1)
     {
         flickerPwrLed();
-        dmxUpdate(&dmxState);
 
-        /* TODO: use dmxState.dimmer, dmxState.colorTemp,
-         *       dmxState.strobeMode, dmxState.strobeSpeed
-         *       to drive PWM outputs and LED brightness */
+        if (dmxUpdate(&dmxState)) {
+            colorCompute(&dmxState, &pwmState);
+            pwmUpdate(&pwmState);
+        }
     }
 }
